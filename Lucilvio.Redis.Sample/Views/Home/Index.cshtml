@@ -1,0 +1,161 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <label> Negocio </label>
+        <div>
+            <select id="negocios">
+                <option value="0"> Selecione </option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <label> Tipo </label>
+        <div>
+            <select id="tipos">
+                <option value="0"> Selecione </option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <label> Uf </label>
+        <div>
+            <select id="ufs">
+                <option value="0"> Selecione </option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <label> Cidade </label>
+        <div>
+            <select id="cidades">
+                <option value="0"> Selecione </option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <label> Bairro </label>
+        <div>
+            <select id="bairros">
+                <option value="0"> Selecione </option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <label> Quartos </label>
+        <div>
+            <select id="quartos">
+                <option value="0"> Selecione </option>
+            </select>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        function preencherComboNegocios() {
+            $.ajaxSetup({ cache: true });
+            $.get("/filtros/negocios").done(function (resposta) {
+                var $combo = $("#negocios");
+                preencherCombo($combo, resposta);
+
+                $combo.off("change").on("change", function () {
+                    desabilitarCombos(["tipos", "ufs", "cidades", "bairros", "quartos"]);
+                    preencherComboTipos($(this).val());
+                });
+            });
+        }
+
+        function preencherComboTipos(negocio) {
+            $.ajaxSetup({ cache: true });
+            $.get("/filtros/tipos", { negocio: negocio }).done(function (resposta) {
+                var $combo = $("#tipos");
+                preencherCombo($combo, resposta);
+
+                $combo.off("change").on("change", function () {
+                    desabilitarCombos(["ufs", "cidades", "bairros", "quartos"]);
+                    preencherComboUfs(negocio, $(this).val());
+                });
+            });
+        }
+
+        function preencherComboUfs(negocio, tipo) {
+            $.get("/filtros/ufs", { negocio: negocio, tipo: tipo }).done(function (resposta) {
+                var $combo = $("#ufs");
+                preencherCombo($combo, resposta);
+
+                $combo.off("change").on("change", function () {
+                    desabilitarCombos(["cidades", "bairros", "quartos"]);
+                    preencherComboCidades(negocio, tipo, $(this).val());
+                });
+            });
+        }
+
+        function preencherComboCidades(negocio, tipo, uf) {
+            $.get("/filtros/cidades", { negocio: negocio, tipo: tipo, uf: uf }).done(function (resposta) {
+                var $combo = $("#cidades");
+                preencherCombo($combo, resposta);
+
+                $combo.off("change").on("change", function () {
+                    desabilitarCombos(["bairros", "quartos"]);
+                    preencherComboBairros(negocio, tipo, uf, $(this).val());
+                });
+            });
+        }
+
+        function preencherComboBairros(negocio, tipo, uf, cidade) {
+            $.get("/filtros/bairros", { negocio: negocio, tipo: tipo, uf: uf, cidade: cidade }).done(function (resposta) {
+                var $combo = $("#bairros");
+                preencherCombo($combo, resposta);
+
+                $combo.off("change").on("change", function () {
+                    desabilitarCombos(["quartos"]);
+                    preencherComboQuartos(negocio, tipo, uf, cidade, $(this).val());
+                });
+            });
+        }
+
+        function preencherComboQuartos(negocio, tipo, uf, cidade, bairro) {
+            $.get("/filtros/quartos", { negocio: negocio, tipo: tipo, uf: uf, cidade: cidade, bairro: bairro }).done(function (resposta) {
+                var $combo = $("#quartos");
+                preencherCombo($combo, resposta);
+            });
+        }
+
+        function desabilitarCombos(combos) {
+            $.each(combos, function (i, item) {
+                $("#" + item).prop("disabled", true).val(0);
+            });
+        }
+
+        function preencherCombo($combo, dados) {
+            var $combo = $combo.empty().append($("<option />").val(0).text("SELECIONE"));
+
+            $.each(dados, function (i, dado) {
+                $combo.append($("<option />").val(dado.valor).text(dado.texto));
+            });
+
+            $combo.prop("disabled", false);
+        }
+
+        preencherComboNegocios("negocios");
+    </script>
+}
